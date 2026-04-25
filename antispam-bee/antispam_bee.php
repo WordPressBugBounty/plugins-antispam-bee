@@ -9,7 +9,7 @@
  * Domain Path: /lang
  * License:     GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
- * Version:     2.11.10
+ * Version:     2.11.11
  *
  * @package Antispam Bee
  **/
@@ -1654,6 +1654,11 @@ class Antispam_Bee {
 			array(
 				'body'  => 'dating|sex|lotto|pharmacy',
 				'email' => '@mail\.ru|@yandex\.',
+			),
+			array(
+				'body' => '^https?:\/\/shorturl\.fm\/[a-zA-Z0-9]{5}$',
+				'email' => '@gmail\.com',
+				'author' => '^[A-Z][a-z]+\d{3,4}$',
 			),
 		);
 
