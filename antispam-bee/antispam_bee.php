@@ -9,7 +9,7 @@
  * Domain Path: /lang
  * License:     GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
- * Version:     2.11.11
+ * Version:     2.11.12
  *
  * @package Antispam Bee
  **/
@@ -752,13 +752,15 @@ class Antispam_Bee {
 
 		echo '<style>#dashboard_right_now .ab-count:before {content: "\f117"}</style>';
 
+		$spam_count = intval( self::get_option( 'spam_count' ) );
+
 		$items[] = '<span class="ab-count">' . esc_html(
 			sprintf(
 				// translators: The number of spam comments Antispam Bee blocked so far.
 				_n(
 					'%s Blocked',
 					'%s Blocked',
-					self::_get_spam_count(),
+					$spam_count,
 					'antispam-bee'
 				),
 				self::_get_spam_count()
