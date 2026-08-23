@@ -9,7 +9,7 @@
  * Domain Path: /lang
  * License:     GPLv2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
- * Version:     2.11.12
+ * Version:     2.11.13
  *
  * @package Antispam Bee
  **/
@@ -586,11 +586,13 @@ class Antispam_Bee {
 			array(
 				sprintf(
 					'<a href="%s">%s</a>',
-					add_query_arg(
-						array(
-							'page' => 'antispam_bee',
-						),
-						admin_url( 'options-general.php' )
+					esc_url(
+						add_query_arg(
+							array(
+								'page' => 'antispam_bee',
+							),
+							admin_url( 'options-general.php' )
+						)
 					),
 					esc_attr__( 'Settings', 'antispam-bee' )
 				),
@@ -1095,7 +1097,7 @@ class Antispam_Bee {
 			printf(
 				'<div class="update-message">%s</div>',
 				wp_kses(
-					wpautop( $data['upgrade_notice '] ),
+					wpautop( $data['upgrade_notice'] ),
 					array(
 						'p'     => array(),
 						'a'     => array( 'href', 'title' ),
@@ -1299,11 +1301,25 @@ class Antispam_Bee {
 			}
 		}
 
+		/**
+		 * Filter to change the inline styles of the honeypot field.
+		 *
+		 * This filter can also be used to use an empty value and load the
+		 * styles from an external file if a strict CSP is used for the site.
+		 *
+		 * @see: https://wordpress.org/support/topic/honeypot-textarea-visible-with-strict-csp-header/
+		 *
+		 * @param string $honeypot_styles The inline styles for the honeypot.
+		 *
+		 * @return string The inline styles for the honeypot.
+		 */
+		$honeypot_styles = apply_filters( 'antispam_bee_honeypot_styles', 'padding:0 !important;clip:rect(1px, 1px, 1px, 1px) !important;position:absolute !important;white-space:nowrap !important;height:1px !important;width:1px !important;overflow:hidden !important;' );
+
 		$output .= ' name="' . esc_attr( self::get_secret_name_for_post( self::$_current_post_id ) ) . '" ';
 		$output .= $matches['between1'] . $matches['between2'] . $matches['between3'];
 		$output .= $matches['after'] . '>';
 		$output .= $matches['content'];
-		$output .= '</textarea><textarea id="comment" aria-label="hp-comment" aria-hidden="true" name="comment" autocomplete="new-password" style="padding:0 !important;clip:rect(1px, 1px, 1px, 1px) !important;position:absolute !important;white-space:nowrap !important;height:1px !important;width:1px !important;overflow:hidden !important;" tabindex="-1"></textarea>';
+		$output .= '</textarea><textarea id="comment" aria-label="hp-comment" aria-hidden="true" name="comment" autocomplete="new-password" style="' . esc_attr( $honeypot_styles ) . '" tabindex="-1"></textarea>';
 
 		$output .= $id_script;
 		$output .= $init_time_field;
@@ -1959,12 +1975,18 @@ class Antispam_Bee {
 		$word_count = 0;
 		$text       = trim( preg_replace( "/[\n\r\t ]+/", ' ', $comment_text ), ' ' );
 
-		/*
-		 * translators: If your word count is based on single characters (e.g. East Asian characters),
-		 * enter 'characters_excluding_spaces' or 'characters_including_spaces'. Otherwise, enter 'words'.
-		 * Do not translate into your own language.
-		 */
-		if ( strpos( _x( 'words', 'Word count type. Do not translate!' ), 'characters' ) === 0 && preg_match( '/^utf\-?8$/i', get_option( 'blog_charset' ) ) ) { // phpcs:ignore WordPress.WP.I18n.MissingArgDomain
+		if ( function_exists( 'wp_get_word_count_type' ) ) {
+			$word_count_type = wp_get_word_count_type();
+		} else {
+			/*
+			 * translators: If your word count is based on single characters (e.g. East Asian characters),
+			 * enter 'characters_excluding_spaces' or 'characters_including_spaces'. Otherwise, enter 'words'.
+			 * Do not translate into your own language.
+			 */
+			$word_count_type = _x( 'words', 'Word count type. Do not translate!' ); // phpcs:ignore WordPress.WP.I18n.MissingArgDomain
+		}
+
+		if ( strpos( $word_count_type, 'characters' ) === 0 && preg_match( '/^utf\-?8$/i', get_option( 'blog_charset' ) ) ) {
 			preg_match_all( '/./u', $text, $words_array );
 			if ( isset( $words_array[0] ) ) {
 				$word_count = count( $words_array[0] );
@@ -2271,7 +2293,7 @@ class Antispam_Bee {
 	 * @return  boolean  TRUE if "wptouch" is active
 	 */
 	private static function _is_mobile() {
-		return strpos( get_template_directory(), 'wptouch' );
+		return false !== strpos( get_template_directory(), 'wptouch' );
 	}
 
 	/**
@@ -2380,7 +2402,12 @@ class Antispam_Bee {
 	 * @return  mixed        FALSE in case of error
 	 */
 	private static function _update_spam_log( $comment ) {
-		if ( ! defined( 'ANTISPAM_BEE_LOG_FILE' ) || ! ANTISPAM_BEE_LOG_FILE || ! is_writable( ANTISPAM_BEE_LOG_FILE ) || validate_file( ANTISPAM_BEE_LOG_FILE ) === 1 ) {
+		if (
+			! defined( 'ANTISPAM_BEE_LOG_FILE' ) ||
+			! ANTISPAM_BEE_LOG_FILE ||
+			validate_file( ANTISPAM_BEE_LOG_FILE ) !== 0 ||
+			! is_writable( ANTISPAM_BEE_LOG_FILE )
+		) {
 			return false;
 		}
 
@@ -2565,7 +2592,7 @@ class Antispam_Bee {
 		);
 
 		// Content.
-		$content = strip_tags( stripslashes( $comment['comment_content'] ) );
+		$content = wp_strip_all_tags( stripslashes( $comment['comment_content'] ) );
 		if ( ! $content ) {
 			$content = sprintf(
 				'-- %s --',
@@ -2586,11 +2613,11 @@ class Antispam_Bee {
 		$body = sprintf(
 			"%s \"%s\"\r\n\r\n",
 			esc_html__( 'New spam comment on your post', 'antispam-bee' ),
-			strip_tags( $post->post_title )
+			wp_strip_all_tags( $post->post_title )
 		) . sprintf(
 			"%s: %s\r\n",
 			esc_html__( 'Author', 'antispam-bee' ),
-			( empty( $comment['comment_author'] ) ? '' : strip_tags( $comment['comment_author'] ) )
+			( empty( $comment['comment_author'] ) ? '' : wp_strip_all_tags( $comment['comment_author'] ) )
 		) . sprintf(
 			"URL: %s\r\n",
 			// empty check exists.
@@ -3018,7 +3045,7 @@ register_uninstall_hook(
 
 // Upgrade notice.
 add_action(
-	'in_plugin_update_message-' . __FILE__,
+	'in_plugin_update_message-' . plugin_basename( __FILE__ ),
 	array(
 		'Antispam_Bee',
 		'upgrade_notice',

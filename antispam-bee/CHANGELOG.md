@@ -1,5 +1,27 @@
 ## Changelog ##
 
+### 2.11.13 ###
+* **English**
+  * Enhancement: New filter `antispam_bee_honeypot_styles` to change the styles of the honeypot field
+  * Fix: Escape the URL of the settings link (Thanks @thisismyurl!)
+  * Fix: Strip tags in the spam notification email the WordPress way (Thanks @thisismyurl!)
+  * Fix: Show the plugin update notice again (Thanks @thisismyurl!)
+  * Fix: Reject more invalid paths for the spam log file (Thanks @thisismyurl!)
+  * Fix: Return a boolean from the mobile theme check (Thanks @thisismyurl!)
+  * Tweak: Use the WordPress function for the word count type
+  * Maintenance: Tested up to WordPress 7.1
+
+* **Deutsch**
+  * Verbesserung: Neuer Filter `antispam_bee_honeypot_styles`, um die Styles des Honeypot-Feldes anzupassen
+  * Fix: Die URL des Einstellungs-Links wird maskiert (Danke @thisismyurl!)
+  * Fix: Tags in der Spam-Benachrichtigungs-E-Mail werden WordPress-konform entfernt (Danke @thisismyurl!)
+  * Fix: Der Update-Hinweis des Plugins wird wieder angezeigt (Danke @thisismyurl!)
+  * Fix: Mehr ungültige Pfade für die Spam-Log-Datei werden abgelehnt (Danke @thisismyurl!)
+  * Fix: Die Prüfung auf mobile Themes gibt einen booleschen Wert zurück (Danke @thisismyurl!)
+  * Tweak: Die WordPress-Funktion für den Typ der Wortzählung wird genutzt
+  * Wartung: Getestet mit WordPress 7.1
+
+
 ### 2.11.12 ###
 * **English**
   * Fix: Fatal error in the dashboard spam counter (Thanks @robertstaddon!)
